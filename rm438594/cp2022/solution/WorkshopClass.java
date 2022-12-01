@@ -14,33 +14,46 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WorkshopClass implements Workshop {
 
+    private static final String EXCEPTION_MSG = "panic: unexpected thread interruption";
+
     Collection<Workplace> workplaces;
 
 
     // Do warunku limit 2*N. Mapa<id usera, Para<czy limituje, semafor dostepnych miejsc>>
     ConcurrentHashMap<Long, Pair<AtomicBoolean, Semaphore>> limitEntriesMap;
-
     Semaphore limitEntriesMapMUTEX;
+
+    ConcurrentHashMap<WorkplaceId, WorkplaceWrapper> workplaceWrapperMap;
+    Semaphore workplaceWrapperMapMUTEX;
+
+    ConcurrentHashMap<Long, WorkplaceId> whereIsWorker;
+
     Semaphore enterMUTEX;
 
-    Semaphore workPlacesSemaphoresMUTEX;
+    //Semaphore workPlacesSemaphoresMUTEX;
 
-    // <stanowisko id, id workera>
-    ConcurrentHashMap<WorkplaceId, Long> whoOccupiesWorkplace;
+    // <stanowisko id, id workera> whoOccupiesWorkplace;
 
-    // <stanowisko id, semafor workerow>
-    ConcurrentHashMap<WorkplaceId, Semaphore> workPlacesSemaphores;
+    // <stanowisko id, semafor workerow> workPlacesSemaphores;
 
     //<Thrad Id, wid okupowanego stanowiska>
     ConcurrentHashMap<Long, WorkplaceId> whoUsesWorkplace;
 
     public WorkshopClass(Collection<Workplace> workplaces) {
         this.workplaces = workplaces;
+
+        whereIsWorker = new ConcurrentHashMap<>();
+
         limitEntriesMap = new ConcurrentHashMap<>();
+
         limitEntriesMapMUTEX = new Semaphore(1, true);
         enterMUTEX = new Semaphore(1, true);
-        workPlacesSemaphoresMUTEX = new Semaphore(1, true);
-        workPlacesSemaphores = new ConcurrentHashMap<>();
+        workplaceWrapperMapMUTEX = new Semaphore(1, true);
+
+        workplaceWrapperMap = new ConcurrentHashMap<>();
+        for (Workplace entry : workplaces) {
+            workplaceWrapperMap.put(entry.getId(), new WorkplaceWrapper(entry.getId(), entry)); //TODO : czy przeploty nie popsuja?
+        }
     }
 
     public Workplace enter(WorkplaceId wid)
@@ -48,15 +61,16 @@ public class WorkshopClass implements Workshop {
         try {
             enterMUTEX.acquire();
         } catch (InterruptedException e) {
-            throw new RuntimeException("panic: unexpected thread interruption");
+            throw new RuntimeException(EXCEPTION_MSG);
         }
 
         // Chcemy wejść:
         try {
             limitEntriesMapMUTEX.acquire();
         } catch (InterruptedException e) {
-            throw new RuntimeException("panic: unexpected thread interruption");
+            throw new RuntimeException(EXCEPTION_MSG);
         }
+
         // Sprawdzamy limity na wątkach:
         for (var entry : limitEntriesMap.entrySet()) {
             boolean doesThreadLimit = entry.getValue().getFirst().get();
@@ -64,28 +78,45 @@ public class WorkshopClass implements Workshop {
             try {
                 entry.getValue().getSecond().acquire();
             } catch (InterruptedException e) {
-                throw new RuntimeException("panic: unexpected thread interruption");
+                throw new RuntimeException(EXCEPTION_MSG);
             }
         }
 
         limitEntriesMapMUTEX.release();
 
-        //Chcemy wejsc na stanowisko:
+        //Chcemy na stanowisko:
         try {
-            workPlacesSemaphoresMUTEX.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("panic: unexpected thread interruption");
+            workplaceWrapperMapMUTEX.acquire();
         }
-        //ustaw się na semaforze do stanowiska
-        workPlacesSemaphores.computeIfAbsent(wid, key -> new Semaphore(1, true));
-        try {
-            workPlacesSemaphores.get(wid).acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("panic: unexpected thread interruption");
+        catch (InterruptedException e) {
+            throw new RuntimeException(EXCEPTION_MSG);
         }
-        workPlacesSemaphoresMUTEX.release();
 
+        //Ustawiamy się w kolejce na stanowisko.
+        workplaceWrapperMap.get(wid).tryAccess();
+
+        workplaceWrapperMapMUTEX.release();
+
+//        //Chcemy wejsc na stanowisko:
+//        try {
+//            workPlacesSemaphoresMUTEX.acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
+//
+//
+//        //ustaw się na semaforze do stanowiska
+//        workPlacesSemaphores.computeIfAbsent(wid, key -> new Semaphore(1, true));
+//        try {
+//            workPlacesSemaphores.get(wid).acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
+//        workPlacesSemaphoresMUTEX.release();
+
+        whereIsWorker.put(Thread.currentThread().getId(), wid); // TODO : czy dobre miejsce
         enterMUTEX.release(); // TODO : źle
+        //Tu już jesteśmy na stanowisku.
 
         return getWorkplaceWrapper(wid);
 
@@ -97,7 +128,7 @@ public class WorkshopClass implements Workshop {
         try {
             limitEntriesMapMUTEX.acquire();
         } catch (InterruptedException e) {
-            throw new RuntimeException("panic: unexpected thread interruption");
+            throw new RuntimeException(EXCEPTION_MSG);
         }
         limitEntriesMap.put(Thread.currentThread().getId(),
                 new Pair(new AtomicBoolean(true),
@@ -112,7 +143,7 @@ public class WorkshopClass implements Workshop {
         try {
             limitEntriesMapMUTEX.acquire();
         } catch (InterruptedException e) {
-            throw new RuntimeException("panic: unexpected thread interruption");
+            throw new RuntimeException(EXCEPTION_MSG);
         }
         limitEntriesMap.get(Thread.currentThread().getId()).getFirst().set(false);
         limitEntriesMapMUTEX.release();
@@ -122,7 +153,21 @@ public class WorkshopClass implements Workshop {
 
     public void leave()
     {
-        // Tutaj już opuszczamy.
+        //Chcemy opuścić stanowisko:
+        try {
+            workplaceWrapperMapMUTEX.acquire();
+        }
+        catch (InterruptedException e) {
+            throw new RuntimeException(EXCEPTION_MSG);
+        }
+
+        WorkplaceId wid = whereIsWorker.get(getThreadId());
+        workplaceWrapperMap.get(wid).tryLeave();
+
+        whereIsWorker.remove(getThreadId()); //wyrucamy z warsztatu
+
+        workplaceWrapperMapMUTEX.release();
+
 
     }
 
@@ -141,6 +186,11 @@ public class WorkshopClass implements Workshop {
             if (entry.getId() == wid)
                 return entry;
         }
+    }
+
+    private Long getThreadId()
+    {
+        return Thread.currentThread().getId();
     }
 
 }

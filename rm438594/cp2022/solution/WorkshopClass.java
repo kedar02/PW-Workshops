@@ -16,7 +16,6 @@ public class WorkshopClass implements Workshop {
 
     Collection<Workplace> workplaces;
 
-    long xd = Thread.currentThread().getId();
 
     // Do warunku limit 2*N. Mapa<id usera, Para<czy limituje, semafor dostepnych miejsc>>
     ConcurrentHashMap<Long, Pair<AtomicBoolean, Semaphore>> limitEntriesMap;
@@ -24,17 +23,24 @@ public class WorkshopClass implements Workshop {
     Semaphore limitEntriesMapMUTEX;
     Semaphore enterMUTEX;
 
+    Semaphore workPlacesSemaphoresMUTEX;
+
     // <stanowisko id, id workera>
     ConcurrentHashMap<WorkplaceId, Long> whoOccupiesWorkplace;
 
     // <stanowisko id, semafor workerow>
     ConcurrentHashMap<WorkplaceId, Semaphore> workPlacesSemaphores;
 
+    //<Thrad Id, wid okupowanego stanowiska>
+    ConcurrentHashMap<Long, WorkplaceId> whoUsesWorkplace;
+
     public WorkshopClass(Collection<Workplace> workplaces) {
         this.workplaces = workplaces;
         limitEntriesMap = new ConcurrentHashMap<>();
         limitEntriesMapMUTEX = new Semaphore(1, true);
         enterMUTEX = new Semaphore(1, true);
+        workPlacesSemaphoresMUTEX = new Semaphore(1, true);
+        workPlacesSemaphores = new ConcurrentHashMap<>();
     }
 
     public Workplace enter(WorkplaceId wid)
@@ -62,9 +68,26 @@ public class WorkshopClass implements Workshop {
             }
         }
 
-        enterMUTEX.release();
+        limitEntriesMapMUTEX.release();
 
-        return getWorkplace(wid);
+        //Chcemy wejsc na stanowisko:
+        try {
+            workPlacesSemaphoresMUTEX.acquire();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("panic: unexpected thread interruption");
+        }
+        //ustaw się na semaforze do stanowiska
+        workPlacesSemaphores.computeIfAbsent(wid, key -> new Semaphore(1, true));
+        try {
+            workPlacesSemaphores.get(wid).acquire();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("panic: unexpected thread interruption");
+        }
+        workPlacesSemaphoresMUTEX.release();
+
+        enterMUTEX.release(); // TODO : źle
+
+        return getWorkplaceWrapper(wid);
 
     }
 
@@ -84,7 +107,7 @@ public class WorkshopClass implements Workshop {
 
         // TODO : dokonujemy SWITCHa
 
-        // Koniec blokady dopiero na pocxzątek use()
+        // Koniec blokady dopiero na początek use()
         // Zmiana była, więć kończymy blokowanie.
         try {
             limitEntriesMapMUTEX.acquire();
@@ -94,16 +117,22 @@ public class WorkshopClass implements Workshop {
         limitEntriesMap.get(Thread.currentThread().getId()).getFirst().set(false);
         limitEntriesMapMUTEX.release();
 
-        return getWorkplace(wid);
+        return getWorkplaceWrapper(wid);
     }
 
     public void leave()
     {
+        // Tutaj już opuszczamy.
 
     }
 
 
     //throw new RuntimeException("not implemented");
+
+    public Workplace getWorkplaceWrapper(WorkplaceId wid)
+    {
+        return new WorkplaceWrapper(wid, getWorkplace(wid));
+    }
 
     private Workplace getWorkplace(WorkplaceId wid)
     {

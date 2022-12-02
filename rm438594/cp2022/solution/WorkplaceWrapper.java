@@ -35,6 +35,7 @@ public class WorkplaceWrapper extends Workplace {
     public void tryLeave()
     {
         workersQueue.release();
+        System.out.println("Permity po leave: " + workersQueue.availablePermits());
     }
 
 

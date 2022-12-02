@@ -40,7 +40,7 @@ public class WorkshopClass implements Workshop {
     ConcurrentHashMap<Long, WorkplaceId> whoUsesWorkplace;
 
     public WorkshopClass(Collection<Workplace> workplaces) {
-        this.workplaces = workplaces;
+        this.workplaces = workplaces;  // TODO : do wywalenia
 
         whereIsWorker = new ConcurrentHashMap<>();
 
@@ -58,6 +58,8 @@ public class WorkshopClass implements Workshop {
 
     public Workplace enter(WorkplaceId wid)
     {
+        String myName = Thread.currentThread().getName();
+
         try {
             enterMUTEX.acquire();
         } catch (InterruptedException e) {
@@ -94,52 +96,45 @@ public class WorkshopClass implements Workshop {
 
         //Ustawiamy się w kolejce na stanowisko.
         workplaceWrapperMap.get(wid).tryAccess();
+        //whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
 
         workplaceWrapperMapMUTEX.release();
 
-//        //Chcemy wejsc na stanowisko:
-//        try {
-//            workPlacesSemaphoresMUTEX.acquire();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(EXCEPTION_MSG);
-//        }
-//
-//
-//        //ustaw się na semaforze do stanowiska
-//        workPlacesSemaphores.computeIfAbsent(wid, key -> new Semaphore(1, true));
-//        try {
-//            workPlacesSemaphores.get(wid).acquire();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(EXCEPTION_MSG);
-//        }
-//        workPlacesSemaphoresMUTEX.release();
-
-        whereIsWorker.put(Thread.currentThread().getId(), wid); // TODO : czy dobre miejsce
         enterMUTEX.release(); // TODO : źle
         //Tu już jesteśmy na stanowisku.
+        whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
 
-        return getWorkplaceWrapper(wid);
+        return workplaceWrapperMap.get(wid);
 
     }
 
     public Workplace switchTo(WorkplaceId wid)
     {
+        String myName = Thread.currentThread().getName();
+
         // Jest chetny do switch:
         try {
             limitEntriesMapMUTEX.acquire();
         } catch (InterruptedException e) {
             throw new RuntimeException(EXCEPTION_MSG);
-        }
-        limitEntriesMap.put(Thread.currentThread().getId(),
+        } //TODO : raczej można bez MUTEXa
+        limitEntriesMap.put(getThreadId(),
                 new Pair(new AtomicBoolean(true),
                         new Semaphore(2 * workplaces.size() - 1, true)) );
         limitEntriesMapMUTEX.release();
 
+        try {
+            workplaceWrapperMapMUTEX.acquire();
+        }
+        catch (InterruptedException e) {
+            throw new RuntimeException(EXCEPTION_MSG);
+        }
+        workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave();
+        workplaceWrapperMap.get(wid).tryAccess();
+        workplaceWrapperMapMUTEX.release();
 
-        // TODO : dokonujemy SWITCHa
 
-        // Koniec blokady dopiero na początek use()
-        // Zmiana była, więć kończymy blokowanie.
+        // TODO : Koniec blokady dopiero na początek use()
         try {
             limitEntriesMapMUTEX.acquire();
         } catch (InterruptedException e) {
@@ -148,7 +143,10 @@ public class WorkshopClass implements Workshop {
         limitEntriesMap.get(Thread.currentThread().getId()).getFirst().set(false);
         limitEntriesMapMUTEX.release();
 
-        return getWorkplaceWrapper(wid);
+        whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
+        System.out.println(myName + " switched its workplace ");
+
+        return workplaceWrapperMap.get(wid);
     }
 
     public void leave()
@@ -162,30 +160,14 @@ public class WorkshopClass implements Workshop {
         }
 
         WorkplaceId wid = whereIsWorker.get(getThreadId());
+        System.out.println("Przy leave() worker jest na wid: " + wid);
         workplaceWrapperMap.get(wid).tryLeave();
 
         whereIsWorker.remove(getThreadId()); //wyrucamy z warsztatu
+        limitEntriesMap.get(getThreadId()).getFirst().set(false); //przestajemy cokolwiek blokować TODO : może zbędne?
 
         workplaceWrapperMapMUTEX.release();
 
-
-    }
-
-
-    //throw new RuntimeException("not implemented");
-
-    public Workplace getWorkplaceWrapper(WorkplaceId wid)
-    {
-        return new WorkplaceWrapper(wid, getWorkplace(wid));
-    }
-
-    private Workplace getWorkplace(WorkplaceId wid)
-    {
-        // TODO : czy potrzebny MUTEX?
-        for (Workplace entry : workplaces) {
-            if (entry.getId() == wid)
-                return entry;
-        }
     }
 
     private Long getThreadId()

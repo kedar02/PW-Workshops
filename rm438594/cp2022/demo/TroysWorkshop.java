@@ -84,6 +84,7 @@ public class TroysWorkshop {
                     if (entered) {
                         System.out.println(myName + " tries to switch its workplace to " + wpt.getName());
                         workplace = this.workshop.switchTo(wpt);
+                        System.out.println(myName + "FINALLY switched its workplace to " + wpt.getName());
                     } else {
                         System.out.println(myName + " tries to enter the workshop and occupy " + wpt.getName());
                         workplace = this.workshop.enter(wpt);

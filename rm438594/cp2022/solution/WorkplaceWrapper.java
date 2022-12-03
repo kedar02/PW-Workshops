@@ -2,7 +2,7 @@ package cp2022.solution;
 
 import cp2022.base.Workplace;
 import cp2022.base.WorkplaceId;
-import cp2022.tests.PolskiWarsztat;
+//import cp2022.tests.PolskiWarsztat;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;

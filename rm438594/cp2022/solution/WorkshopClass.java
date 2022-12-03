@@ -4,20 +4,13 @@ import cp2022.base.Workplace;
 import cp2022.base.WorkplaceId;
 import cp2022.base.Workshop;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.*;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class WorkshopClass implements Workshop {
 
     private static final String EXCEPTION_MSG = "panic: unexpected thread interruption";
-
-    Collection<Workplace> workplaces;
-
 
     // Do warunku limit 2*N. Mapa<id usera, Para<czy limituje, semafor dostepnych miejsc>>
     ConcurrentHashMap<Long, Pair<AtomicBoolean, Semaphore>> limitEntriesMap;
@@ -30,17 +23,11 @@ public class WorkshopClass implements Workshop {
 
     Semaphore enterMUTEX;
 
-    //Semaphore workPlacesSemaphoresMUTEX;
-
-    // <stanowisko id, id workera> whoOccupiesWorkplace;
-
-    // <stanowisko id, semafor workerow> workPlacesSemaphores;
-
     //<Thrad Id, wid okupowanego stanowiska>
     ConcurrentHashMap<Long, WorkplaceId> whoUsesWorkplace;
 
     public WorkshopClass(Collection<Workplace> workplaces) {
-        this.workplaces = workplaces;  // TODO : do wywalenia
+//        this.workplaces = workplaces;  // TODO : do wywalenia
 
         whereIsWorker = new ConcurrentHashMap<>();
 
@@ -112,19 +99,9 @@ public class WorkshopClass implements Workshop {
     {
         String myName = Thread.currentThread().getName();
 
-        // Jest chetny do switch:
-//        try {
-//            limitEntriesMapMUTEX.acquire();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(EXCEPTION_MSG);
-//        }
         limitEntriesMap.put(getThreadId(),
                 new Pair(new AtomicBoolean(true),
-                        new Semaphore(2 * workplaces.size() - 1, true)) );
-//        limitEntriesMap.compute(getThreadId(), (key, val) ->
-//                new Pair(new AtomicBoolean(true),
-//                        new Semaphore(2 * workplaces.size() - 1, true)) );
-        //limitEntriesMapMUTEX.release();
+                        new Semaphore(2 * workplaceWrapperMap.size() - 1, true)) );
 
         workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
         try {
@@ -159,7 +136,8 @@ public class WorkshopClass implements Workshop {
         workplaceWrapperMap.get(wid).tryLeave();
 
         whereIsWorker.remove(getThreadId()); //wyrucamy z warsztatu
-        limitEntriesMap.get(getThreadId()).getFirst().set(false); //przestajemy cokolwiek blokować TODO : może zbędne?
+        //limitEntriesMap.get(getThreadId()).getFirst().set(false); //przestajemy cokolwiek blokować TODO : może zbędne?
+        limitEntriesMap.remove(getThreadId());
 
     }
 

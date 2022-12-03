@@ -113,23 +113,26 @@ public class WorkshopClass implements Workshop {
         String myName = Thread.currentThread().getName();
 
         // Jest chetny do switch:
-        try {
-            limitEntriesMapMUTEX.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
-        } //TODO : raczej można bez MUTEXa
+//        try {
+//            limitEntriesMapMUTEX.acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
         limitEntriesMap.put(getThreadId(),
                 new Pair(new AtomicBoolean(true),
                         new Semaphore(2 * workplaces.size() - 1, true)) );
-        limitEntriesMapMUTEX.release();
+//        limitEntriesMap.compute(getThreadId(), (key, val) ->
+//                new Pair(new AtomicBoolean(true),
+//                        new Semaphore(2 * workplaces.size() - 1, true)) );
+        //limitEntriesMapMUTEX.release();
 
+        workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
         try {
             workplaceWrapperMapMUTEX.acquire();
         }
         catch (InterruptedException e) {
             throw new RuntimeException(EXCEPTION_MSG);
         }
-        workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave();
         workplaceWrapperMap.get(wid).tryAccess();
         workplaceWrapperMapMUTEX.release();
 
@@ -140,7 +143,7 @@ public class WorkshopClass implements Workshop {
         } catch (InterruptedException e) {
             throw new RuntimeException(EXCEPTION_MSG);
         }
-        limitEntriesMap.get(Thread.currentThread().getId()).getFirst().set(false);
+        limitEntriesMap.get(getThreadId()).getFirst().set(false);
         limitEntriesMapMUTEX.release();
 
         whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
@@ -151,22 +154,12 @@ public class WorkshopClass implements Workshop {
 
     public void leave()
     {
-        //Chcemy opuścić stanowisko:
-        try {
-            workplaceWrapperMapMUTEX.acquire();
-        }
-        catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
-        }
 
         WorkplaceId wid = whereIsWorker.get(getThreadId());
-        System.out.println("Przy leave() worker jest na wid: " + wid);
         workplaceWrapperMap.get(wid).tryLeave();
 
         whereIsWorker.remove(getThreadId()); //wyrucamy z warsztatu
         limitEntriesMap.get(getThreadId()).getFirst().set(false); //przestajemy cokolwiek blokować TODO : może zbędne?
-
-        workplaceWrapperMapMUTEX.release();
 
     }
 

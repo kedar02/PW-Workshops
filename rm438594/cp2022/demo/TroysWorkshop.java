@@ -20,7 +20,7 @@ import cp2022.solution.WorkshopFactory;
 
 
 public class TroysWorkshop {
-    
+
     private static class TroysWorkplaceId extends WorkplaceId {
         private final String name;
         public TroysWorkplaceId(String name) {
@@ -37,7 +37,7 @@ public class TroysWorkshop {
             return this.name;
         }
     }
-    
+
     private static class TroysWorkplace extends Workplace {
         private final static long MIN_USE_TIME_IN_MS = 10;
         private final static long MAX_USE_TIME_IN_MS = 100;
@@ -60,7 +60,7 @@ public class TroysWorkshop {
             return ((TroysWorkplaceId)this.getId()).getName();
         }
     }
-    
+
     private static class DiyFan implements Runnable {
         private final Workshop workshop;
         private final List<TroysWorkplaceId> neededWorkplaces;
@@ -84,7 +84,6 @@ public class TroysWorkshop {
                     if (entered) {
                         System.out.println(myName + " tries to switch its workplace to " + wpt.getName());
                         workplace = this.workshop.switchTo(wpt);
-                        System.out.println(myName + "FINALLY switched its workplace to " + wpt.getName());
                     } else {
                         System.out.println(myName + " tries to enter the workshop and occupy " + wpt.getName());
                         workplace = this.workshop.enter(wpt);
@@ -101,12 +100,12 @@ public class TroysWorkshop {
             }
         }
     }
-    
+
     public static void main(String[] args) {
         // Create the workshop.
         TroysWorkplaceId drillingId = new TroysWorkplaceId("the drilling station");
         TroysWorkplaceId machiningId = new TroysWorkplaceId("the machining station");
-        TroysWorkplaceId weldingId = new TroysWorkplaceId("the welding station");        
+        TroysWorkplaceId weldingId = new TroysWorkplaceId("the welding station");
         TroysWorkplaceId quenchingId = new TroysWorkplaceId("the quenching station");
         TroysWorkplaceId paintingId = new TroysWorkplaceId("the painting station");
         Collection<Workplace> workplaces = new ArrayList<Workplace>(4);
@@ -151,12 +150,12 @@ public class TroysWorkshop {
         }
         for (Thread diyFan : diyFans) {
             try {
-                diyFan.join();                
+                diyFan.join();
             } catch (InterruptedException e) {
                 throw new RuntimeException("panic: unexpected thread interruption");
             }
         }
 
     }
-    
+
 }

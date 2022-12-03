@@ -144,7 +144,7 @@ public class TroysWorkshop {
                         "Charlie"
                 );
         // Run everything.
-        List<Thread> diyFans = Arrays.asList(new Thread[] {alice, bob, charlie});
+        List<Thread> diyFans = Arrays.asList(new Thread[] {alice, bob, charlie}); //, charlie
         for (Thread diyFan : diyFans) {
             diyFan.start();
         }

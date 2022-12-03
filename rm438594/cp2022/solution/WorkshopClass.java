@@ -26,30 +26,40 @@ public class WorkshopClass implements Workshop {
     //<Thread Id, wid okupowanego stanowiska>
     ConcurrentHashMap<Long, WorkplaceId> whoUsesWorkplace;
 
+    //<Thread Id, cokolwiek>
+    ConcurrentHashMap<Long, Boolean> wantsEnterMap;
+
+    //<Thread Id, cokolwiek>
+    ConcurrentHashMap<Long, Boolean> wantsSwitchMap;
+
     public WorkshopClass(Collection<Workplace> workplaces) {
 
         whereIsWorker = new ConcurrentHashMap<>();
 
         limitEntriesMap = new ConcurrentHashMap<>();
 
+        wantsEnterMap = new ConcurrentHashMap<>();
+
+        wantsSwitchMap = new ConcurrentHashMap<>();
+
         limitEntriesMapMUTEX = new Semaphore(1, true);
-        enterMUTEX = new Semaphore(1, true);
+        //enterMUTEX = new Semaphore(1, true);
         workplaceWrapperMapMUTEX = new Semaphore(1, true);
 
         workplaceWrapperMap = new ConcurrentHashMap<>();
         for (Workplace entry : workplaces) {
-            workplaceWrapperMap.put(entry.getId(), new WorkplaceWrapper(entry.getId(), entry)); //TODO : czy przeploty nie popsuja?
+            workplaceWrapperMap.put(entry.getId(), new WorkplaceWrapper(entry.getId(), entry, this)); //TODO : czy przeploty nie popsuja?
         }
     }
 
     public Workplace enter(WorkplaceId wid)
     {
 
-        try {
-            enterMUTEX.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
-        }
+//        try {
+//            enterMUTEX.acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
 
         // Chcemy wejść:
         try {
@@ -69,13 +79,14 @@ public class WorkshopClass implements Workshop {
 
         limitEntriesMapMUTEX.release();
 
+        wantsEnterMap.put(getThreadId(), true);
 
-        //Ustawiamy się w kolejce na stanowisko.
-        workplaceWrapperMap.get(wid).tryAccess();
-
-        enterMUTEX.release(); // TODO : źle
-        //Tu już jesteśmy na stanowisku.
-        whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
+//        //Ustawiamy się w kolejce na stanowisko.
+//        workplaceWrapperMap.get(wid).tryAccess();
+//
+//        //enterMUTEX.release(); // TODO : źle
+//        //Tu już jesteśmy na stanowisku.
+//        whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
 
         return workplaceWrapperMap.get(wid);
 
@@ -83,20 +94,20 @@ public class WorkshopClass implements Workshop {
 
     public Workplace switchTo(WorkplaceId wid)
     {
-        String myName = Thread.currentThread().getName();
 
         limitEntriesMap.put(getThreadId(),
                         new Semaphore(2 * workplaceWrapperMap.size() - 1, true) );
 
-        workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
-        workplaceWrapperMap.get(wid).tryAccess();
+//        workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
+//        workplaceWrapperMap.get(wid).tryAccess();
+//
+//
+//        limitEntriesMap.remove(getThreadId());
 
 
-        limitEntriesMap.remove(getThreadId());
+        //whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
 
-
-        whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
-        //System.out.println(myName + " switched its workplace ");
+        wantsSwitchMap.put(getThreadId(), true);
 
         return workplaceWrapperMap.get(wid);
     }
@@ -116,6 +127,38 @@ public class WorkshopClass implements Workshop {
     private Long getThreadId()
     {
         return Thread.currentThread().getId();
+    }
+
+    // Od razu zeruje.
+    public boolean wantsEnter()
+    {
+        boolean ans = wantsEnterMap.containsKey(getThreadId());
+        wantsEnterMap.remove(getThreadId());
+        return ans;
+    }
+
+    public boolean wantsSwitch()
+    {
+        boolean ans = wantsSwitchMap.containsKey(getThreadId());
+        wantsSwitchMap.remove(getThreadId());
+        return ans;
+    }
+
+    public void setWhereIsWorker(WorkplaceId wid)
+    {
+        whereIsWorker.put(getThreadId(), wid);
+    }
+
+    public void leaveInSwitch()
+    {
+        workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
+        //workplaceWrapperMap.get(wid).tryAccess();
+
+    }
+
+    public void stopLimitEntries()
+    {
+        limitEntriesMap.remove(getThreadId());
     }
 
 }

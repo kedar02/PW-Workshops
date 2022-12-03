@@ -2,6 +2,7 @@ package cp2022.solution;
 
 import cp2022.base.Workplace;
 import cp2022.base.WorkplaceId;
+import cp2022.base.Workshop;
 //import cp2022.tests.PolskiWarsztat;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -15,13 +16,19 @@ public class WorkplaceWrapper extends Workplace {
 
     private Workplace originalWorkplace;
 
+    WorkplaceId wid;
+
+    private WorkshopClass workshop;
+
     private Semaphore workersQueue;
 
     ConcurrentLinkedQueue<Long> waitingWorkersQueue;
 
-    public WorkplaceWrapper(WorkplaceId id, Workplace originalWorkplace) {
+    public WorkplaceWrapper(WorkplaceId id, Workplace originalWorkplace, WorkshopClass workshop) {
         super(id);
+        wid = id;
         this.originalWorkplace = originalWorkplace;
+        this.workshop = workshop;
 
         workersQueue = new Semaphore(1, true);
 
@@ -47,7 +54,25 @@ public class WorkplaceWrapper extends Workplace {
     @Override
     public void use() {
         // TODO : tu coś robisz
-        // tryAccess(
+        if(workshop.wantsEnter())
+        {
+            //Ustawiamy się w kolejce na stanowisko.
+            tryAccess();
+
+            //Tu już jesteśmy na stanowisku.
+            workshop.setWhereIsWorker(wid);
+        }
+        if(workshop.wantsSwitch())
+        {
+            workshop.leaveInSwitch();
+            //Ustawiamy się w kolejce na stanowisko.
+            tryAccess();
+
+            workshop.stopLimitEntries();
+
+            //Tu już jesteśmy na stanowisku.
+            workshop.setWhereIsWorker(wid);
+        }
         originalWorkplace.use();
     }
 

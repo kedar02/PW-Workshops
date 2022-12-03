@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Main{
     public static void main(String[] args) {
-        int verbose = 0;
+        int verbose = 1;
 
         List<TestWorkshop> list = List.of(
             new OneWorkerCorrectSwitchingTest(),

@@ -12,8 +12,8 @@ public class WorkshopClass implements Workshop {
 
     private static final String EXCEPTION_MSG = "panic: unexpected thread interruption";
 
-    // Do warunku limit 2*N. Mapa<id usera, Para<czy limituje, semafor dostepnych miejsc>>
-    ConcurrentHashMap<Long, Pair<AtomicBoolean, Semaphore>> limitEntriesMap;
+    // Do warunku limit 2*N. Mapa<id usera, semafor dostepnych miejsc>
+    ConcurrentHashMap<Long, Semaphore> limitEntriesMap;
     Semaphore limitEntriesMapMUTEX;
 
     ConcurrentHashMap<WorkplaceId, WorkplaceWrapper> workplaceWrapperMap;
@@ -23,11 +23,10 @@ public class WorkshopClass implements Workshop {
 
     Semaphore enterMUTEX;
 
-    //<Thrad Id, wid okupowanego stanowiska>
+    //<Thread Id, wid okupowanego stanowiska>
     ConcurrentHashMap<Long, WorkplaceId> whoUsesWorkplace;
 
     public WorkshopClass(Collection<Workplace> workplaces) {
-//        this.workplaces = workplaces;  // TODO : do wywalenia
 
         whereIsWorker = new ConcurrentHashMap<>();
 
@@ -45,7 +44,6 @@ public class WorkshopClass implements Workshop {
 
     public Workplace enter(WorkplaceId wid)
     {
-        String myName = Thread.currentThread().getName();
 
         try {
             enterMUTEX.acquire();
@@ -62,10 +60,8 @@ public class WorkshopClass implements Workshop {
 
         // Sprawdzamy limity na wątkach:
         for (var entry : limitEntriesMap.entrySet()) {
-            boolean doesThreadLimit = entry.getValue().getFirst().get();
-            if (!doesThreadLimit) continue;
             try {
-                entry.getValue().getSecond().acquire();
+                entry.getValue().acquire();
             } catch (InterruptedException e) {
                 throw new RuntimeException(EXCEPTION_MSG);
             }
@@ -73,19 +69,9 @@ public class WorkshopClass implements Workshop {
 
         limitEntriesMapMUTEX.release();
 
-        //Chcemy na stanowisko:
-        try {
-            workplaceWrapperMapMUTEX.acquire();
-        }
-        catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
-        }
 
         //Ustawiamy się w kolejce na stanowisko.
         workplaceWrapperMap.get(wid).tryAccess();
-        //whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
-
-        workplaceWrapperMapMUTEX.release();
 
         enterMUTEX.release(); // TODO : źle
         //Tu już jesteśmy na stanowisku.
@@ -100,31 +86,17 @@ public class WorkshopClass implements Workshop {
         String myName = Thread.currentThread().getName();
 
         limitEntriesMap.put(getThreadId(),
-                new Pair(new AtomicBoolean(true),
-                        new Semaphore(2 * workplaceWrapperMap.size() - 1, true)) );
+                        new Semaphore(2 * workplaceWrapperMap.size() - 1, true) );
 
         workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
-        try {
-            workplaceWrapperMapMUTEX.acquire();
-        }
-        catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
-        }
         workplaceWrapperMap.get(wid).tryAccess();
-        workplaceWrapperMapMUTEX.release();
 
 
-        // TODO : Koniec blokady dopiero na początek use()
-        try {
-            limitEntriesMapMUTEX.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
-        }
-        limitEntriesMap.get(getThreadId()).getFirst().set(false);
-        limitEntriesMapMUTEX.release();
+        limitEntriesMap.remove(getThreadId());
+
 
         whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
-        System.out.println(myName + " switched its workplace ");
+        //System.out.println(myName + " switched its workplace ");
 
         return workplaceWrapperMap.get(wid);
     }
@@ -137,7 +109,7 @@ public class WorkshopClass implements Workshop {
 
         whereIsWorker.remove(getThreadId()); //wyrucamy z warsztatu
         //limitEntriesMap.get(getThreadId()).getFirst().set(false); //przestajemy cokolwiek blokować TODO : może zbędne?
-        limitEntriesMap.remove(getThreadId());
+        //limitEntriesMap.remove(getThreadId());
 
     }
 

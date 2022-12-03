@@ -4,6 +4,7 @@ import cp2022.base.Workplace;
 import cp2022.base.WorkplaceId;
 //import cp2022.tests.PolskiWarsztat;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,11 +17,15 @@ public class WorkplaceWrapper extends Workplace {
 
     private Semaphore workersQueue;
 
+    ConcurrentLinkedQueue<Long> waitingWorkersQueue;
+
     public WorkplaceWrapper(WorkplaceId id, Workplace originalWorkplace) {
         super(id);
         this.originalWorkplace = originalWorkplace;
 
         workersQueue = new Semaphore(1, true);
+
+        waitingWorkersQueue = new ConcurrentLinkedQueue<>();
     }
 
     public void tryAccess()
@@ -35,13 +40,14 @@ public class WorkplaceWrapper extends Workplace {
     public void tryLeave()
     {
         workersQueue.release();
-        System.out.println("Permity po leave: " + workersQueue.availablePermits());
+        //System.out.println("Permity po leave: " + workersQueue.availablePermits());
     }
 
 
     @Override
     public void use() {
         // TODO : tu coś robisz
+        // tryAccess(
         originalWorkplace.use();
     }
 

@@ -103,6 +103,11 @@ public abstract class TestWorkshop {
         }
         Workplace res = internal.switchTo(getWid(placeId));
 
+        //todo
+        if (verbose > 0) {
+            System.out.println("Worker " + workerId + " internally switched to " + placeId);
+        }
+
         if (new WorkplaceIdInt(placeId).compareTo(res.getId()) != 0) {
             throw new RuntimeException("Test failed: worker " + workerId + " received workplace with id " + res.getId() + " but expected workplace with id " + placeId);
         }
@@ -141,11 +146,16 @@ public abstract class TestWorkshop {
 
     public void use(int placeId) {
         int workerId;
+        System.out.println("Zaczyna use() worker ");
         synchronized (occupation) {
             Map<Long, Integer> map = occupation.get(placeId);
             long threadId = Thread.currentThread().getId();
             workerId = map.get(threadId);
             if (map.size() > 1) {
+                for (var entry : map.entrySet() ) {
+                    System.out.println("XX: " + entry.getValue());
+                }
+                System.out.println("XDDDDD");
                 throw new RuntimeException("Worker " + workerId + " is using the workplace " + placeId + " while someone else is occupying it");
             }
             usage.put(placeId, workerId);

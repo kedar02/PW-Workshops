@@ -54,25 +54,30 @@ public class WorkplaceWrapper extends Workplace {
     @Override
     public void use() {
         // TODO : tu coś robisz
-        if(workshop.wantsEnter())
-        {
-            //Ustawiamy się w kolejce na stanowisko.
-            tryAccess();
-
-            //Tu już jesteśmy na stanowisku.
-            workshop.setWhereIsWorker(wid);
-        }
+//        if(workshop.wantsEnter())
+//        {
+//            //Ustawiamy się w kolejce na stanowisko.
+//            tryAccess();
+//
+//            //Tu już jesteśmy na stanowisku.
+//            workshop.setWhereIsWorker(wid);
+//        }
         if(workshop.wantsSwitch())
         {
             workshop.leaveInSwitch();
             //Ustawiamy się w kolejce na stanowisko.
-            tryAccess();
+            //tryAccess();
 
             workshop.stopLimitEntries();
 
             //Tu już jesteśmy na stanowisku.
             workshop.setWhereIsWorker(wid);
         }
+//        else {
+//            throw new RuntimeException("error");
+//        }
+        //while()
+        System.out.println("Wykonuje workplace "+wid+" teraz thread: " + Thread.currentThread().getId());
         originalWorkplace.use();
     }
 

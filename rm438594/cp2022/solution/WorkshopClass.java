@@ -84,9 +84,15 @@ public class WorkshopClass implements Workshop {
 //        //Ustawiamy się w kolejce na stanowisko.
 //        workplaceWrapperMap.get(wid).tryAccess();
 //
-//        //enterMUTEX.release(); // TODO : źle
-//        //Tu już jesteśmy na stanowisku.
-//        whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
+        //enterMUTEX.release(); // TODO : źle
+        //Tu już jesteśmy na stanowisku.
+        whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
+
+            //zamiast w use():
+            workplaceWrapperMap.get(wid).tryAccess();
+
+            //Tu już jesteśmy na stanowisku.
+            setWhereIsWorker(wid);
 
         return workplaceWrapperMap.get(wid);
 
@@ -108,6 +114,15 @@ public class WorkshopClass implements Workshop {
         //whereIsWorker.put(getThreadId(), wid); // TODO : czy dobre miejsce
 
         wantsSwitchMap.put(getThreadId(), true);
+//
+           // leaveInSwitch();
+            //Ustawiamy się w kolejce na stanowisko.
+            workplaceWrapperMap.get(wid).tryAccess();
+
+            //stopLimitEntries();
+
+            //Tu już jesteśmy na stanowisku.
+            //setWhereIsWorker(wid);
 
         return workplaceWrapperMap.get(wid);
     }

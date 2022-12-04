@@ -14,7 +14,7 @@ import cp2022.tests.pggp_tests.utility.Test;
 public class Main {
     public static void main(String[] args) {
         // If you want to log information, change to 1 or 2.
-        int verbose = 1;
+        int verbose = 2;
 
         System.out.println("Parameter verbose = " + verbose + ". It can be changed in the code of the tests to print the logs.");
         System.out.println("Tests add some operations after and before switch, enter and leave. Since we are unable to detect" +
@@ -35,40 +35,40 @@ public class Main {
         SimulationWithBugCheck.timeOfWaitBetweenActionsWhenOrderMatters = 30;
 
         Test[] tests = {
-                new TestSimpleOneWorkplace(),
-                new TestSimpleQueue(),
-                new TestSimpleOneUse(),
-                new TestSimpleOneUseRepeated(),
-                new TestSimpleSwitchRepeated(),
-                new TestSimpleSwitchAndUse(),
-                new TestSimpleQueueInsideAndUse(),
-                new TestSimpleOneStaysOneMoves(),
-                new TestSimpleOneWorkplaceManyTimes(),
-                new TestSimpleTwoQueues(),
-                new TestDeadlockPair(),
-                new TestDeadlockPairManyTimes(),
-                new TestDeadlockTriCycle(),
-                new TestDeadlockTriCycleManyTimes(),
-                new TestDeadlockOneBigOneSmallCycleWithCommonVertex(),
-                new TestStarvationTricycleAndQueue(),
-                new TestStarvationOneLongQueue(),
-                new TestStarvationStar(),
-                new TestStarvationManyQueues(),
-                new TestStarvationBigStar(),
-                new TestEfficiencyParallel(),
-                new TestEfficiencyCycle(),
-                new TestBigRandomRotations(),
-                new TestBigRandom1(),
-                new TestBigRandom2(),
-                new TestBigRandom3(),
-                new TestBigRandom4(),
-                new TestBigRandom5(),
-                new TestBigRandom6(),
-                new TestBigRandomStarvation(),
-                new TestBigRandom7(),
-                new TestBigRandomStarvation2(),
-                new TestEfficiencyBigRandom(),
-                new TestEfficiencyOrderErrorCatch()
+//                new TestSimpleOneWorkplace(),
+//                new TestSimpleQueue(),
+//                new TestSimpleOneUse(),
+//                new TestSimpleOneUseRepeated(),
+//                new TestSimpleSwitchRepeated(),
+//                new TestSimpleSwitchAndUse(),
+//                new TestSimpleQueueInsideAndUse(),
+//                new TestSimpleOneStaysOneMoves(),
+//                new TestSimpleOneWorkplaceManyTimes(),
+//                new TestSimpleTwoQueues(),
+//                new TestDeadlockPair(),
+//                new TestDeadlockPairManyTimes(),
+//                new TestDeadlockTriCycle(),
+//                new TestDeadlockTriCycleManyTimes(),
+//                new TestDeadlockOneBigOneSmallCycleWithCommonVertex(),
+//                new TestStarvationTricycleAndQueue(),
+//                new TestStarvationOneLongQueue(),
+//                new TestStarvationStar(),
+//                new TestStarvationManyQueues(),
+//                new TestStarvationBigStar(),
+//                new TestEfficiencyParallel(),
+//                new TestEfficiencyCycle(),
+//                new TestBigRandomRotations(),
+//                new TestBigRandom1(),
+//                new TestBigRandom2(),
+//                new TestBigRandom3(),
+//                new TestBigRandom4(),
+//                new TestBigRandom5(),
+//                new TestBigRandom6(),
+//                new TestBigRandomStarvation(),
+//                new TestBigRandom7(),
+//                new TestBigRandomStarvation2(),
+//                new TestEfficiencyBigRandom(),
+//                new TestEfficiencyOrderErrorCatch()
         };
 
         int i = 1;

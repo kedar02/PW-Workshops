@@ -3,12 +3,10 @@ package cp2022.solution;
 import cp2022.base.Workplace;
 import cp2022.base.WorkplaceId;
 import cp2022.base.Workshop;
-//import cp2022.tests.PolskiWarsztat;
 
 import java.util.concurrent.*;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorkplaceWrapper extends Workplace {
@@ -34,14 +32,9 @@ public class WorkplaceWrapper extends Workplace {
 
     private ConcurrentHashMap<Long, Boolean> waitingThreads;
 
-    private Semaphore leaveMUTEX;
-
     Long occupantId;
 
-    //private Semaphore latchMUTEX;
-
     private boolean wantsSwitch;
-    //ConcurrentLinkedQueue<Long> waitingWorkersQueue;
 
     public WorkplaceWrapper(WorkplaceId id, Workplace originalWorkplace, WorkshopClass workshop) {
         super(id);
@@ -50,8 +43,6 @@ public class WorkplaceWrapper extends Workplace {
         this.workshop = workshop;
 
         workersQueue = new Semaphore(1, true);
-
-        //waitingWorkersQueue = new ConcurrentLinkedQueue<>();
 
         next = null;
         whichCycle = null;
@@ -64,8 +55,6 @@ public class WorkplaceWrapper extends Workplace {
         accessMUTEX = new Semaphore(1, true);
 
         waitingThreads = new ConcurrentHashMap<>();
-//        leaveMUTEX = new Semaphore(1, true);
-        //latchMUTEX = new Semaphore(1, true);
     }
 
     public void tryAccess()
@@ -86,7 +75,7 @@ public class WorkplaceWrapper extends Workplace {
             //wpusćć
             permitCount.decrementAndGet();
         }
-        occupantId = Thread.currentThread().getId();
+        //occupantId = Thread.currentThread().getId();
 
         //permitMUTEX.release();
 //        try {
@@ -110,12 +99,12 @@ public class WorkplaceWrapper extends Workplace {
             Long waitingThread = entry.getKey();
             waitingThreads.remove(waitingThread);
             workshop.unlockSemaphore(waitingThread);
+            System.out.println("Wyouszczam ze stanowiska workera: "+entry.getKey());
         }
         else
         {
             permitCount.incrementAndGet();
         }
-
         //permitMUTEX.release();
 //        workersQueue.release();
         //System.out.println("Permity po leave: " + workersQueue.availablePermits());
@@ -175,19 +164,9 @@ public class WorkplaceWrapper extends Workplace {
 
     public void decreaseLatch()
     {
-//        try {
-//            latchMUTEX.acquire();
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(EXCEPTION_MSG);
-//        }
-
         if (cycleLatch != null) {
-            //System.out.println("Latch down from " + cycleLatch.getCount());
             cycleLatch.countDown();
-            //System.out.println("Latch to " + cycleLatch.getCount());
         }
-
-//        latchMUTEX.release();
     }
 
     public CountDownLatch getLatch()
@@ -211,24 +190,20 @@ public class WorkplaceWrapper extends Workplace {
         return occupantId;
     }
 
+    public void setOccupantId()
+    {
+        occupantId = Thread.currentThread().getId();
+    }
+
     @Override
     public void use() {
-//        if(workshop.wantsEnter())
-//        {
-//            //Ustawiamy się w kolejce na stanowisko.
-//            tryAccess();
-//
-//            //Tu już jesteśmy na stanowisku.
-//            workshop.setWhereIsWorker(wid);
-//        }
         if(workshop.wantsSwitch())
         {
-            //System.out.println("jestem na koncu switcha");
             if (whichCycle == null)
              workshop.leaveInSwitch();
             //workshop.setNullNext();
             workshop.downLatch(whichCycle);
-            workshop.stopLimitEntries();
+            //workshop.stopLimitEntries();
             //setWantsSwitch(false);
             //next = null; //moznaby gdzie indziej
         }
@@ -250,6 +225,7 @@ public class WorkplaceWrapper extends Workplace {
             workshop.setNullNext();
             workshop.setWhereIsWorker(wid);
             workshop.stopWantsSwitch();
+            workshop.stopLimitEntries();
         }
         originalWorkplace.use();
     }

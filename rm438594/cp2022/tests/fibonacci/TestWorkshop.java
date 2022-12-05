@@ -146,7 +146,7 @@ public abstract class TestWorkshop {
 
     public void use(int placeId) {
         int workerId;
-        System.out.println("Zaczyna use() worker ");
+//        System.out.println("Zaczyna use() worker ");
         synchronized (occupation) {
             Map<Long, Integer> map = occupation.get(placeId);
             long threadId = Thread.currentThread().getId();
@@ -155,7 +155,7 @@ public abstract class TestWorkshop {
                 for (var entry : map.entrySet() ) {
                     System.out.println("XX: " + entry.getValue());
                 }
-                System.out.println("XDDDDD");
+//                System.out.println("XDDDDD");
                 throw new RuntimeException("Worker " + workerId + " is using the workplace " + placeId + " while someone else is occupying it");
             }
             usage.put(placeId, workerId);

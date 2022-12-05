@@ -11,17 +11,17 @@ public class Main{
         List<TestWorkshop> list = List.of(
 //                new OneWorkerCorrectSwitchingTest(),
 //            new ManyWorkersOneGapTest(),
-//           new ConcurrencyTest()
-            //new TwoWorkersOppositeTest()
-            new TwoWorkersOppositeManyTimesTest()
-//            new CycleTest(),
-//            new CycleManyTimesTest()
-//            new WorkerStayingTest(),
-//            new DeadlockTwoGroupsTest(),
+//           new ConcurrencyTest(),
+//            new TwoWorkersOppositeTest(),
+//            new TwoWorkersOppositeManyTimesTest(),
+            //new CycleTest()
+           new CycleManyTimesTest()
+            //new WorkerStayingTest()
+            //new DeadlockTwoGroupsTest()
 //            new DeadlockTwoGroupsManyTimesTest(),
-//            new DeadlockTreeTest(),
-//            new ManyWorkersChaosTest(),
-//            new RandomTest(),
+            //new DeadlockTreeTest()
+            //new ManyWorkersChaosTest()
+            //new RandomTest()
 //            new AllPermutationsTest()
         );
         System.out.println("\nATTENTION:\nThese tests don't check for starvation! \n");

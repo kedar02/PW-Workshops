@@ -14,7 +14,7 @@ import cp2022.tests.pggp_tests.utility.Test;
 public class Main {
     public static void main(String[] args) {
         // If you want to log information, change to 1 or 2.
-        int verbose = 0;
+        int verbose = 2;
 
         System.out.println("Parameter verbose = " + verbose + ". It can be changed in the code of the tests to print the logs.");
         System.out.println("Tests add some operations after and before switch, enter and leave. Since we are unable to detect" +
@@ -39,15 +39,15 @@ public class Main {
 //                new TestSimpleQueue(),
 //                new TestSimpleOneUse(),
 //                new TestSimpleOneUseRepeated(),
-                //new TestSimpleSwitchRepeated(),
-                //new TestSimpleSwitchAndUse(),
+//                new TestSimpleSwitchRepeated(),
+//                new TestSimpleSwitchAndUse(),
 //                new TestSimpleQueueInsideAndUse(),
-                //new TestSimpleOneStaysOneMoves(),
+//                new TestSimpleOneStaysOneMoves(),
 //                new TestSimpleOneWorkplaceManyTimes(),
-//                new TestSimpleTwoQueues(),
-                new TestDeadlockPair()
-                //new TestDeadlockPairManyTimes()
-//                new TestDeadlockTriCycle(),
+//                new TestSimpleTwoQueues()
+       //         new TestDeadlockPair()
+                new TestDeadlockPairManyTimes()
+//                new TestDeadlockTriCycle()
 //                new TestDeadlockTriCycleManyTimes(),
 //                new TestDeadlockOneBigOneSmallCycleWithCommonVertex(),
 //                new TestStarvationTricycleAndQueue(),
@@ -55,10 +55,10 @@ public class Main {
 //                new TestStarvationStar(),
 //                new TestStarvationManyQueues(),
 //                new TestStarvationBigStar(),
-//                new TestEfficiencyParallel(),
+//                new TestEfficiencyParallel()
 //                new TestEfficiencyCycle(),
 //                new TestBigRandomRotations(),
-//                new TestBigRandom1(),
+//                new TestBigRandom1()
 //                new TestBigRandom2(),
 //                new TestBigRandom3(),
 //                new TestBigRandom4(),

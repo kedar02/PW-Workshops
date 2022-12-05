@@ -6,23 +6,23 @@ import java.util.List;
 
 public class Main{
     public static void main(String[] args) {
-        int verbose = 1;
+        int verbose = 0;
 
         List<TestWorkshop> list = List.of(
-            new OneWorkerCorrectSwitchingTest(),
+              new OneWorkerCorrectSwitchingTest(),
             new ManyWorkersOneGapTest(),
-            new ConcurrencyTest(),
+           new ConcurrencyTest(),
             new TwoWorkersOppositeTest(),
-            new TwoWorkersOppositeManyTimesTest(),
-            new CycleTest(),
-            new CycleManyTimesTest(),
-            new WorkerStayingTest(),
-            new DeadlockTwoGroupsTest(),
-            new DeadlockTwoGroupsManyTimesTest(),
-            new DeadlockTreeTest(),
-            new ManyWorkersChaosTest(),
-            new RandomTest(),
-            new AllPermutationsTest()
+            new TwoWorkersOppositeManyTimesTest()
+//            new CycleTest(),
+//            new CycleManyTimesTest(),
+//            new WorkerStayingTest(),
+//            new DeadlockTwoGroupsTest(),
+//            new DeadlockTwoGroupsManyTimesTest(),
+//            new DeadlockTreeTest(),
+//            new ManyWorkersChaosTest(),
+//            new RandomTest(),
+//            new AllPermutationsTest()
         );
         System.out.println("\nATTENTION:\nThese tests don't check for starvation! \n");
         for (TestWorkshop test : list) {

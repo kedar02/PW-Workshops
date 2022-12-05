@@ -29,7 +29,7 @@ public class WorkplaceWrapper extends Workplace {
 
     private CountDownLatch cycleLatch;
 
-    private Semaphore latchMUTEX;
+    //private Semaphore latchMUTEX;
 
     private boolean wantsSwitch;
     //ConcurrentLinkedQueue<Long> waitingWorkersQueue;
@@ -48,7 +48,7 @@ public class WorkplaceWrapper extends Workplace {
         whichCycle = null;
         cycleLatch = null;
         wantsSwitch = false;
-        latchMUTEX = new Semaphore(1, true);
+        //latchMUTEX = new Semaphore(1, true);
     }
 
     public void tryAccess()
@@ -104,11 +104,11 @@ public class WorkplaceWrapper extends Workplace {
 
     public void decreaseLatch()
     {
-        try {
-            latchMUTEX.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
-        }
+//        try {
+//            latchMUTEX.acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
 
         if (cycleLatch != null) {
             //System.out.println("Latch down from " + cycleLatch.getCount());
@@ -116,7 +116,7 @@ public class WorkplaceWrapper extends Workplace {
             //System.out.println("Latch to " + cycleLatch.getCount());
         }
 
-        latchMUTEX.release();
+//        latchMUTEX.release();
     }
 
     public CountDownLatch getLatch()
@@ -153,8 +153,7 @@ public class WorkplaceWrapper extends Workplace {
             //workshop.setNullNext();
             workshop.downLatch(whichCycle);
             workshop.stopLimitEntries();
-            workshop.setWhereIsWorker(wid);
-            setWantsSwitch(false);
+            //setWantsSwitch(false);
             //next = null; //moznaby gdzie indziej
         }
 //        else {
@@ -170,6 +169,12 @@ public class WorkplaceWrapper extends Workplace {
         }
         //workshop.setNullNext();
         //setNext(null);
+        if(workshop.wantsSwitch())
+        {
+            workshop.setNullNext();
+            workshop.setWhereIsWorker(wid);
+            workshop.stopWantsSwitch();
+        }
         originalWorkplace.use();
     }
 

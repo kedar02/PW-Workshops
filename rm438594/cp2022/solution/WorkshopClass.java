@@ -118,17 +118,37 @@ public class WorkshopClass implements Workshop {
                 //System.out.println("Cykl znalazł: " + Thread.currentThread().getName() + " o!!!!!!!wid:" + curWid);
                 workplaceWrapperMap.get(curWid).setCycleLatch(cycleSize);
                 workplaceWrapperMap.get(curWid).setWhichCycle(curWid);
-                workplaceWrapperMap.get(nextWid).tryLeave(); //todo : zastanow
+                //workplaceWrapperMap.get(curWid).tryLeave(); //todo : zastanow
 
+                WorkplaceId prevWid = null;
                 nextWid = wid;
                 while (nextWid != curWid)
                 {
                     if (nextWid == null) {
-                        break;
+                        throw new RuntimeException("NULL :(");
                     }
                     //System.out.println(nextWid);
                     workplaceWrapperMap.get(nextWid).setWhichCycle(curWid);
-                    workplaceWrapperMap.get(nextWid).tryLeave(); //todo : zastanow
+                    //workplaceWrapperMap.get(nextWid).tryLeave(); //todo : zastanow
+                    prevWid = nextWid;
+                    nextWid = workplaceWrapperMap.get(nextWid).getNext();
+                }
+
+                Long prevThreadId;
+                prevThreadId = workplaceWrapperMap.get(prevWid).getOccupantId();
+                workplaceWrapperMap.get(curWid).tryLeave(prevThreadId);
+                prevWid = curWid;
+                nextWid = wid;
+                while (nextWid != curWid)
+                {
+                    if (nextWid == null) {
+                        throw new RuntimeException("NULL :(");
+                    }
+                    //System.out.println(nextWid);
+                    //curThreadId =
+                    prevThreadId = workplaceWrapperMap.get(prevWid).getOccupantId();
+                    workplaceWrapperMap.get(nextWid).tryLeave(); //wpusc o ID z argumentu
+                    prevWid = nextWid;
                     nextWid = workplaceWrapperMap.get(nextWid).getNext();
                 }
                 break;

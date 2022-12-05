@@ -5,7 +5,7 @@ public class KwasowMain {
   public static void main(String[] args) {
     // Ustaw tę wartość na true, jeśli chcesz otrzymywać takie same logi jak
     // w oficjalnym przykładzie
-    boolean verbose = true;
+    boolean verbose = false;
 
     // Ten test ma dwóch robotników, którzy na zmianę używają dwóch narzędzi
     // i przesiadają się między sobą
@@ -17,7 +17,7 @@ public class KwasowMain {
     // w cyklu chyba, aczkolwiek tu oczywiści może się zdarzyć jakiś dziwny
     // przeplot, który sprawi, że Seba przyjdzie dopiero, jak cała trójka
     // sobie już pójdzie).
-    //KwasowBigCycleTest.run(verbose);
+    KwasowBigCycleTest.run(verbose);
 
     // W tym teście jest jedna osoba, która przesiada się cały czas na swoje
     // miejsce i druga, która chce na nie wejść z zewnątrz. W końcu ta pierwsza
@@ -26,7 +26,7 @@ public class KwasowMain {
     // swoim stanowisku, chce się przesiąść na stanowisko osoby drugiej, ale musi
     // zaczekać. W końcu osoba druga kończy, osoba trzecia się przesiada, a potem
     // wychodzi z warsztatu.
-    //KwasowSwitchToSameWorkplaceTest.run(verbose);
+    KwasowSwitchToSameWorkplaceTest.run(verbose);
   }
 
 }

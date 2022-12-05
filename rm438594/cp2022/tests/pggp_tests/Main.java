@@ -45,8 +45,8 @@ public class Main {
                 //new TestSimpleOneStaysOneMoves(),
 //                new TestSimpleOneWorkplaceManyTimes(),
 //                new TestSimpleTwoQueues(),
-                //new TestDeadlockPair()
-                new TestDeadlockPairManyTimes()
+                new TestDeadlockPair()
+                //new TestDeadlockPairManyTimes()
 //                new TestDeadlockTriCycle(),
 //                new TestDeadlockTriCycleManyTimes(),
 //                new TestDeadlockOneBigOneSmallCycleWithCommonVertex(),

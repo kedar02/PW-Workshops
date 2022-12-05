@@ -36,6 +36,8 @@ public class WorkplaceWrapper extends Workplace {
 
     private Semaphore leaveMUTEX;
 
+    Long occupantId;
+
     //private Semaphore latchMUTEX;
 
     private boolean wantsSwitch;
@@ -55,6 +57,8 @@ public class WorkplaceWrapper extends Workplace {
         whichCycle = null;
         cycleLatch = null;
         wantsSwitch = false;
+
+        occupantId = null;
 
         permitCount = new AtomicInteger(1);
         accessMUTEX = new Semaphore(1, true);
@@ -82,6 +86,7 @@ public class WorkplaceWrapper extends Workplace {
             //wpusćć
             permitCount.decrementAndGet();
         }
+        occupantId = Thread.currentThread().getId();
 
         //permitMUTEX.release();
 //        try {
@@ -123,9 +128,6 @@ public class WorkplaceWrapper extends Workplace {
             if(!waitingThreads.containsKey(threadId)) {
                 throw new RuntimeException("Problem przy zwalnianiu watka o danym ID");
             }
-            //zwolnij oczekujacy
-            //Map.Entry<Long,Boolean> entry = waitingThreads.entrySet().iterator().next();
-            //Long waitingThread = waitingThreads.get(threadId);
             waitingThreads.remove(threadId);
             workshop.unlockSemaphore(threadId);
         }
@@ -202,6 +204,11 @@ public class WorkplaceWrapper extends Workplace {
         catch (InterruptedException e) {
             throw new RuntimeException(EXCEPTION_MSG);
         }
+    }
+
+    public Long getOccupantId()
+    {
+        return occupantId;
     }
 
     @Override

@@ -89,12 +89,16 @@ public class WorkshopClass implements Workshop {
 
         WorkplaceId curWid = whereIsWorker.get(getThreadId());
 
+        if (curWid == wid) {
+            return workplaceWrapperMap.get(wid);
+        }
+
         // Sprawdzamy czy domykamy cykl:
         int cycleSize = 1;
         workplaceWrapperMap.get(curWid).setNext(wid);
         WorkplaceId nextWid = wid;
         //System.out.println("Not null: "+nextWid);
-        while (nextWid != null)
+        while (nextWid != null && nextWid != curWid)
         {
             nextWid = workplaceWrapperMap.get(nextWid).getNext();
             //System.out.println(nextWid);
@@ -102,20 +106,24 @@ public class WorkshopClass implements Workshop {
             if (nextWid == curWid)
             {
                 //System.out.println("Rozmiar cyklu: "+cycleSize);
-                System.out.println("Cykl znalazł: " + Thread.currentThread().getName() + " o!!!!!!!wid:" + curWid);
+                //System.out.println("Cykl znalazł: " + Thread.currentThread().getName() + " o!!!!!!!wid:" + curWid);
                 // Mamy cykl!!!
                 workplaceWrapperMap.get(curWid).setCycleLatch(cycleSize);
                 workplaceWrapperMap.get(curWid).setWhichCycle(curWid);
                 workplaceWrapperMap.get(nextWid).tryLeave(); //todo : zastanow
 
                 nextWid = wid;
+                WorkplaceId temp;
                 while (nextWid != curWid)
                 {
                     //System.out.println(nextWid);
                     workplaceWrapperMap.get(nextWid).setWhichCycle(curWid);
                     workplaceWrapperMap.get(nextWid).tryLeave(); //todo : zastanow
+                    temp = nextWid;
                     nextWid = workplaceWrapperMap.get(nextWid).getNext();
+                    workplaceWrapperMap.get(temp).setNext(null);
                 }
+                workplaceWrapperMap.get(curWid).setNext(null);
                 break;
             }
 //            if(nextWid == null)
@@ -180,6 +188,11 @@ public class WorkshopClass implements Workshop {
         workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
         //workplaceWrapperMap.get(wid).tryAccess();
 
+    }
+
+    public void setNullNext()
+    {
+        workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).setNext(null);
     }
 
     public void stopLimitEntries()

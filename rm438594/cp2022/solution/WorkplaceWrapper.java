@@ -5,19 +5,18 @@ import cp2022.base.WorkplaceId;
 import cp2022.base.Workshop;
 //import cp2022.tests.PolskiWarsztat;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorkplaceWrapper extends Workplace {
     private static final String EXCEPTION_MSG = "panic: unexpected thread interruption";
 
     private Workplace originalWorkplace;
 
-    WorkplaceId wid;
+    private WorkplaceId wid;
 
     private WorkshopClass workshop;
 
@@ -28,6 +27,14 @@ public class WorkplaceWrapper extends Workplace {
     private WorkplaceId whichCycle;
 
     private CountDownLatch cycleLatch;
+
+    private AtomicInteger permitCount;
+
+    private Semaphore accessMUTEX;
+
+    private ConcurrentHashMap<Long, Boolean> waitingThreads;
+
+    private Semaphore leaveMUTEX;
 
     //private Semaphore latchMUTEX;
 
@@ -48,22 +55,84 @@ public class WorkplaceWrapper extends Workplace {
         whichCycle = null;
         cycleLatch = null;
         wantsSwitch = false;
+
+        permitCount = new AtomicInteger(1);
+        accessMUTEX = new Semaphore(1, true);
+
+        waitingThreads = new ConcurrentHashMap<>();
+//        leaveMUTEX = new Semaphore(1, true);
         //latchMUTEX = new Semaphore(1, true);
     }
 
     public void tryAccess()
     {
-        try {
-            workersQueue.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(EXCEPTION_MSG);
+//        try {
+//            permitMUTEX.acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
+        if(permitCount.get() == 0)
+        {
+            //czekaj
+            waitingThreads.put(Thread.currentThread().getId(), true);
+            workshop.lockSemaphore();
         }
+        else
+        {
+            //wpusćć
+            permitCount.decrementAndGet();
+        }
+
+        //permitMUTEX.release();
+//        try {
+//            workersQueue.acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
     }
 
     public void tryLeave()
     {
-        workersQueue.release();
+//        try {
+//            permitMUTEX.acquire();
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(EXCEPTION_MSG);
+//        }
+        if(waitingThreads.size() > 0)
+        {
+            //zwolnij oczekujacy
+            Map.Entry<Long,Boolean> entry = waitingThreads.entrySet().iterator().next();
+            Long waitingThread = entry.getKey();
+            waitingThreads.remove(waitingThread);
+            workshop.unlockSemaphore(waitingThread);
+        }
+        else
+        {
+            permitCount.incrementAndGet();
+        }
+
+        //permitMUTEX.release();
+//        workersQueue.release();
         //System.out.println("Permity po leave: " + workersQueue.availablePermits());
+    }
+
+    public void tryLeave(Long threadId)
+    {
+        if(waitingThreads.size() > 0)
+        {
+            if(!waitingThreads.containsKey(threadId)) {
+                throw new RuntimeException("Problem przy zwalnianiu watka o danym ID");
+            }
+            //zwolnij oczekujacy
+            //Map.Entry<Long,Boolean> entry = waitingThreads.entrySet().iterator().next();
+            //Long waitingThread = waitingThreads.get(threadId);
+            waitingThreads.remove(threadId);
+            workshop.unlockSemaphore(threadId);
+        }
+        else
+        {
+            permitCount.incrementAndGet();
+        }
     }
 
     public void setNext(WorkplaceId next)

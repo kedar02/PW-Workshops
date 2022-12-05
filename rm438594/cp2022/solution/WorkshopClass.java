@@ -34,6 +34,9 @@ public class WorkshopClass implements Workshop {
 
     ConcurrentHashMap<WorkplaceId, WorkplaceId> nextMap;
 
+    //mapa <ThreadId, Semaphore>
+    ConcurrentHashMap<Long, Semaphore> threadsSemaphore;
+
     public WorkshopClass(Collection<Workplace> workplaces) {
 
         whereIsWorker = new ConcurrentHashMap<>();
@@ -44,6 +47,8 @@ public class WorkshopClass implements Workshop {
 
         wantsSwitchMap = new ConcurrentHashMap<>();
         nextMap = new ConcurrentHashMap<>(); //TODO
+
+        threadsSemaphore = new ConcurrentHashMap<>();
 
         limitEntriesMapMUTEX = new Semaphore(1, true);
         workplaceWrapperMapMUTEX = new Semaphore(1, true);
@@ -74,8 +79,6 @@ public class WorkshopClass implements Workshop {
 
         limitEntriesMapMUTEX.release();
 
-        //wantsEnterMap.put(getThreadId(), true);
-
         workplaceWrapperMap.get(wid).tryAccess();
 
         setWhereIsWorker(wid);
@@ -100,11 +103,6 @@ public class WorkshopClass implements Workshop {
         int cycleSize = 1;
         workplaceWrapperMap.get(curWid).setNext(wid);
         //nextMap.put(curWid, wid);
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
         //System.out.println("Ustawione next to: " + workplaceWrapperMap.get(curWid).getNext());
         WorkplaceId nextWid = wid;
         //System.out.println("Not null: "+nextWid);
@@ -118,13 +116,11 @@ public class WorkshopClass implements Workshop {
             {
                 //System.out.println("ROZMIAR CYKLU: "+cycleSize);
                 //System.out.println("Cykl znalazł: " + Thread.currentThread().getName() + " o!!!!!!!wid:" + curWid);
-                // Mamy cykl!!!
                 workplaceWrapperMap.get(curWid).setCycleLatch(cycleSize);
                 workplaceWrapperMap.get(curWid).setWhichCycle(curWid);
                 workplaceWrapperMap.get(nextWid).tryLeave(); //todo : zastanow
 
                 nextWid = wid;
-                //WorkplaceId temp;
                 while (nextWid != curWid)
                 {
                     if (nextWid == null) {
@@ -133,32 +129,16 @@ public class WorkshopClass implements Workshop {
                     //System.out.println(nextWid);
                     workplaceWrapperMap.get(nextWid).setWhichCycle(curWid);
                     workplaceWrapperMap.get(nextWid).tryLeave(); //todo : zastanow
-                    //temp = nextWid;
                     nextWid = workplaceWrapperMap.get(nextWid).getNext();
-                    //nextWid = nextMap.get(nextWid);
-                    //workplaceWrapperMap.get(temp).setNext(null);
                 }
-                //workplaceWrapperMap.get(curWid).setNext(null);
                 break;
             }
-//            if(nextWid == null)
-//                workplaceWrapperMap.get(curWid).setNext(wid);
         }
 
 
         workplaceWrapperMap.get(wid).tryAccess();
 
-        //workplaceWrapperMap.get(curWid).setNext(null);
-
-        //workplaceWrapperMap.get(curWid).setWantsSwitch(true);
-
         wantsSwitchMap.put(getThreadId(), true);
-
-        //WorkplaceId idStartCycle = workplaceWrapperMap.get(curWid).getWhichCycle();
-//        if (idStartCycle != null)
-//            workplaceWrapperMap.get(idStartCycle).decreaseLatch();
-
-        //setWhereIsWorker(wid);
 
         return workplaceWrapperMap.get(wid);
     }
@@ -188,9 +168,6 @@ public class WorkshopClass implements Workshop {
 
     public boolean wantsSwitch()
     {
-//        boolean ans = wantsSwitchMap.containsKey(getThreadId());
-//        wantsSwitchMap.remove(getThreadId());
-//        return ans;
         return wantsSwitchMap.containsKey(getThreadId());
     }
 
@@ -207,15 +184,12 @@ public class WorkshopClass implements Workshop {
     public void leaveInSwitch()
     {
         workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).tryLeave(); //TODO : tymczasowo
-        //workplaceWrapperMap.get(wid).tryAccess();
 
     }
 
     public void setNullNext()
     {
         workplaceWrapperMap.get(whereIsWorker.get(getThreadId())).setNext(null);
-//        if(whereIsWorker.get(getThreadId()) != null)
-//            nextMap.remove(whereIsWorker.get(getThreadId()));
     }
 
     public void stopLimitEntries()
@@ -235,6 +209,26 @@ public class WorkshopClass implements Workshop {
 //        if (idStartCycle != null) {
 //                workplaceWrapperMap.get(idStartCycle).getLatch().countDown();
 //        }
+    }
+
+    public void lockSemaphore()
+    {
+        threadsSemaphore.put(getThreadId(), new Semaphore(0, true));
+        try {
+            threadsSemaphore.get(getThreadId()).acquire();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(EXCEPTION_MSG);
+        }
+//        if(threadsSemaphore.get(getThreadId()) == null)
+//        {
+//            threadsSemaphore.put(getThreadId(), new Semaphore(0, true));
+//        }
+//        threadsSemaphore
+    }
+
+    public void unlockSemaphore(Long threadId)
+    {
+        threadsSemaphore.get(threadId).release();
     }
 
 }

@@ -14,7 +14,7 @@ import cp2022.tests.pggp_tests.utility.Test;
 public class Main {
     public static void main(String[] args) {
         // If you want to log information, change to 1 or 2.
-        int verbose = 2;
+        int verbose = 0;
 
         System.out.println("Parameter verbose = " + verbose + ". It can be changed in the code of the tests to print the logs.");
         System.out.println("Tests add some operations after and before switch, enter and leave. Since we are unable to detect" +

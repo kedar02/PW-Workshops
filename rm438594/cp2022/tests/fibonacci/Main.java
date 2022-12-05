@@ -9,13 +9,13 @@ public class Main{
         int verbose = 0;
 
         List<TestWorkshop> list = List.of(
-              new OneWorkerCorrectSwitchingTest(),
-            new ManyWorkersOneGapTest(),
-           new ConcurrencyTest(),
-            new TwoWorkersOppositeTest(),
+//                new OneWorkerCorrectSwitchingTest(),
+//            new ManyWorkersOneGapTest(),
+//           new ConcurrencyTest()
+            //new TwoWorkersOppositeTest()
             new TwoWorkersOppositeManyTimesTest()
 //            new CycleTest(),
-//            new CycleManyTimesTest(),
+//            new CycleManyTimesTest()
 //            new WorkerStayingTest(),
 //            new DeadlockTwoGroupsTest(),
 //            new DeadlockTwoGroupsManyTimesTest(),

@@ -51,7 +51,7 @@ public class Main {
 //                new TestDeadlockTriCycleManyTimes(),
 //                new TestDeadlockOneBigOneSmallCycleWithCommonVertex(),
 //                new TestStarvationTricycleAndQueue(),
-//                new TestStarvationOneLongQueue(),
+                new TestStarvationOneLongQueue(),
 //                new TestStarvationStar(),
 //                new TestStarvationManyQueues(),
 //                new TestStarvationBigStar(),

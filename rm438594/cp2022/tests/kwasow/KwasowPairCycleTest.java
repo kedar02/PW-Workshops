@@ -34,6 +34,8 @@ public class KwasowPairCycleTest {
         Workplace workplace;
         String myName = Thread.currentThread().getName();
 
+        //System.out.println(myName + " id: " + Thread.currentThread().getName());
+
         log(myName + " tries to enter the workshop and occupy " + saw.getName(), verbose);
         workplace = workshop.enter(saw.getId());
         log(myName + " now occupies " + saw.getName(), verbose);
